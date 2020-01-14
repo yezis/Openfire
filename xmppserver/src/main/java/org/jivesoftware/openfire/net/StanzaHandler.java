@@ -108,10 +108,14 @@ public abstract class StanzaHandler {
         this.session = session;
     }
 
+    // 处理数据节
     public void process(String stanza, XMPPPacketReader reader) throws Exception {
 
+        /** 会话初始化操作，处理完直接返回*/
+        // 是否是初始化数据节
         boolean initialStream = stanza.startsWith("<stream:stream") || stanza.startsWith("<flash:stream");
-        if (!sessionCreated || initialStream) {
+        if (!sessionCreated || initialStream) {  // 初始化或创建的过程，处理完就结束
+            // 处理初始化数据节
             if (!initialStream) {
                 // Allow requests for flash socket policy files directly on the client listener port
                 if (stanza.startsWith("<policy-file-request/>")) {
@@ -148,6 +152,7 @@ public abstract class StanzaHandler {
             return;
         }
 
+        // 当数据节为</stream:stream>意味着本次会话结束
         // Verify if end of stream was requested
         if (stanza.equals("</stream:stream>")) {
             if (session != null) {
@@ -157,16 +162,21 @@ public abstract class StanzaHandler {
             }
             return;
         }
+
+        // 忽略处理<?xml version="1.0"?>的数据节
         // Ignore <?xml version="1.0"?> stanzas sent by clients
         if (stanza.startsWith("<?xml")) {
             return;
         }
+
+        // 通过接受到的数据节创建一个DOM对象（使用的是dom4j中的Element，xmpp的数据包本来就是xml）
         // Create DOM object from received stanza
         Element doc = reader.read(new StringReader(stanza)).getRootElement();
-        if (doc == null) {
+        if (doc == null) { // 判断一下空
             // No document found.
             return;
         }
+
         String tag = doc.getName();
         if ("starttls".equals(tag)) {
             // Negotiate TLS
@@ -202,6 +212,7 @@ public abstract class StanzaHandler {
         }
     }
 
+    // 处理DOM节点
     private void process(Element doc) throws UnauthorizedException {
         if (doc == null) {
             return;
@@ -214,6 +225,7 @@ public abstract class StanzaHandler {
             return;
         }
 
+        // 根据dom名字的不同（error/message/presence/iq/未知数据包，未知数据包的判断是子类实现的）
         String tag = doc.getName();
         if ("error".equals(tag)) {
             Log.info("The stream is being closed by the peer, which sent this stream error: " + doc.asXML());
@@ -314,9 +326,9 @@ public abstract class StanzaHandler {
             processIQ(packet);
         }
         else {
-            if (!processUnknowPacket(doc)) {
+            if (!processUnknowPacket(doc)) { // 调用子类的实现，判断是否是未知数据包
                 Log.warn(LocaleUtils.getLocalizedString("admin.error.packet.tag") + doc.asXML() + ". Closing session: " + session);
-                session.close();
+                session.close(); // 遇到未知数据包，关闭会话
             }
         }
     }

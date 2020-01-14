@@ -126,23 +126,42 @@ import org.xmpp.packet.JID;
  * The main XMPP server that will load, initialize and start all the server's
  * modules. The server is unique in the JVM and could be obtained by using the
  * {@link #getInstance()} method.
+ *
+ * xmpp服务器的主函数，用于初始化与启动所有服务器模块。
+ * 服务器对象具有唯一性，可通过{@link #getInstance()}静态方法获得
+ *
  * <p>
  * The loaded modules will be initialized and may access through the server other
  * modules. This means that the only way for a module to locate another module is
  * through the server. The server maintains a list of loaded modules.
  * </p>
+ *
+ * 加载的模块将被初始化，并且可以通过服务器进行访问其他模块，
+ * 这意味着一个模块定位其他模块只能通过服务器进行访问，
+ * 服务器维护着已加载模块的列表
+ *
  * <p>
  * After starting up all the modules the server will load any available plugin.
  * For more information see: {@link org.jivesoftware.openfire.container.PluginManager}.
  * </p>
+ *
+ * 当服务器开启所有模块后，将会加载已发现的所有插件
+ *
  * <p>A configuration file keeps the server configuration. This information is required for the
  * server to work correctly. The server assumes that the configuration file is named
  * <b>openfire.xml</b> and is located in the <b>conf</b> folder. The folder that keeps
  * the configuration file must be located under the home folder. The server will try different
  * methods to locate the home folder.</p>
+ *
+ * 存在一个设置文件保存着服务器设置，为了使服务器正确的运行这些信息是必要的。
+ * 服务器假设设置文件命名为openfire.xml，并且存放于conf文件夹。conf文件夹保存着设置文件并且在主文件夹下。
+ * 服务器将会尝试不同的方法定位主文件夹
+ *
  * <ol>
  * <li><b>system property</b> - The server will use the value defined in the <i>openfireHome</i>
  * system property.</li>
+ * 服务器会使用值定义openfireHome
+ *
  * <li><b>working folder</b> -  The server will check if there is a <i>conf</i> folder in the
  * working directory. This is the case when running in standalone mode.</li>
  * <li><b>openfire_init.xml file</b> - Attempt to load the value from openfire_init.xml which
@@ -168,7 +187,7 @@ public class XMPPServer {
         final List<String> properties = new ArrayList<>(Arrays.asList(
             // Admin console network settings
             "adminConsole.port", "adminConsole.securePort", "adminConsole.interface", "network.interface",
-            // Misc. settings
+            // Misc. settings  fqdn：(Fully Qualified Domain Name)全限定域名
             "locale", "fqdn", "setup", ClusterManager.CLUSTER_PROPERTY_NAME,
             // Database config
             "connectionProvider.className",
@@ -206,7 +225,7 @@ public class XMPPServer {
     private RemoteSessionLocator remoteSessionLocator;
 
     /**
-     * True if in setup mode
+     * True if in setup mode  安装设置模式
      */
     private boolean setupMode = true;
 
@@ -361,6 +380,8 @@ public class XMPPServer {
      * Adds a new server listener that will be notified when the server has been started
      * or is about to be stopped.
      *
+     * 添加服务器监听器，监听服务器的开启与停止
+     *
      * @param listener the new server listener to add.
      */
     public void addServerListener(XMPPServerListener listener) {
@@ -377,9 +398,14 @@ public class XMPPServer {
         listeners.remove(listener);
     }
 
+    /**
+     * 初始化
+     * @throws FileNotFoundException
+     */
     private void initialize() throws FileNotFoundException {
         locateOpenfire();
 
+        // 检查xml配置文件中是否配置了 安装状态
         if ("true".equals(JiveGlobals.getXMLProperty("setup"))) {
             setupMode = false;
         }
@@ -439,6 +465,9 @@ public class XMPPServer {
         }
     }
 
+    /**
+     * 运行自动安装
+     */
     void runAutoSetup() {
         // steps from setup-datasource-standard.jsp
         // do this first so that other changes persist
@@ -902,6 +931,7 @@ public class XMPPServer {
         }
     }
 
+    // 是否是安装模式
     public boolean isSetupMode() {
         return setupMode;
     }
@@ -921,8 +951,8 @@ public class XMPPServer {
      * Returns if the server is running in standalone mode. We consider that it's running in
      * standalone if the "org.jivesoftware.openfire.starter.ServerStarter" class is present in the
      * system.
-     *
-     * @return true if the server is running in standalone mode.
+     * 是否是单机模式
+     * @return true if the server is running in standalone mode.ServerStarter
      */
     public boolean isStandAlone() {
         boolean standalone;
@@ -937,6 +967,7 @@ public class XMPPServer {
 
     /**
      * Verify that the database is accessible.
+     * 检查数据库是否可用
      */
     private void verifyDataSource() {
         Connection con = null;
@@ -964,7 +995,7 @@ public class XMPPServer {
      * Verifies that the given home guess is a real Openfire home directory.
      * We do the verification by checking for the Openfire config file in
      * the config dir of jiveHome.
-     *
+     * 检查主文件夹
      * @param homeGuess a guess at the path to the home directory.
      * @param jiveConfigName the name of the config file to check.
      * @return a file pointing to the home directory or null if the

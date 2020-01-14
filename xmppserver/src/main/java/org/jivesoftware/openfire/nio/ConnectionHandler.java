@@ -48,15 +48,15 @@ public abstract class ConnectionHandler extends IoHandlerAdapter {
     static final String CONNECTION = "CONNECTION";
 
     private static final ThreadLocal<XMPPPacketReader> PARSER_CACHE = new ThreadLocal<XMPPPacketReader>()
-            {
-               @Override
-               protected XMPPPacketReader initialValue()
-               {
-                  final XMPPPacketReader parser = new XMPPPacketReader();
-                  parser.setXPPFactory( factory );
-                  return parser;
-               }
-            };
+    {
+        @Override
+        protected XMPPPacketReader initialValue()
+        {
+            final XMPPPacketReader parser = new XMPPPacketReader();
+            parser.setXPPFactory( factory );
+            return parser;
+        }
+    };
     /**
      * Reuse the same factory for all the connections.
      */
@@ -85,15 +85,18 @@ public abstract class ConnectionHandler extends IoHandlerAdapter {
     public void sessionOpened(IoSession session) throws Exception {
         // Create a new XML parser for the new connection. The parser will be used by the XMPPDecoder filter.
         final XMLLightweightParser parser = new XMLLightweightParser(StandardCharsets.UTF_8);
-        session.setAttribute(XML_PARSER, parser);
+        session.setAttribute(XML_PARSER, parser);  // 设置IoBuffer-xml解析器，在XMPPDecoder解码器中会使用到
         // Create a new NIOConnection for the new session
+        // 为新的连接创建并设置NIOConnection
         final NIOConnection connection = createNIOConnection(session);
         session.setAttribute(CONNECTION, connection);
+        // 设置节点处理器StanzaHandler（调用子类实现的方法createStanzaHandler）
         session.setAttribute(HANDLER, createStanzaHandler(connection));
         // Set the max time a connection can be idle before closing it. This amount of seconds
         // is divided in two, as Openfire will ping idle clients first (at 50% of the max idle time)
         // before disconnecting them (at 100% of the max idle time). This prevents Openfire from
         // removing connections without warning.
+        // 设置连接的闲置时间（调用子类实现的方法getMaxIdleTime查询最大闲置时间）
         final int idleTime = getMaxIdleTime() / 2;
         if (idleTime > 0) {
             session.getConfig().setIdleTime(IdleStatus.READER_IDLE, idleTime);
@@ -125,7 +128,7 @@ public abstract class ConnectionHandler extends IoHandlerAdapter {
     @Override
     public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
         if (session.getIdleCount(status) > 1) {
-            // Get the connection for this session
+            // Get the connection for this session  连接超时空闲，关闭
             final Connection connection = (Connection) session.getAttribute(CONNECTION);
             if (connection != null) {
                 // Close idle connection
@@ -145,14 +148,14 @@ public abstract class ConnectionHandler extends IoHandlerAdapter {
             // OF-524: Determine stream:error message.
             final StreamError error;
             if ( cause != null && (cause instanceof XMLNotWellFormedException || (cause.getCause() != null && cause.getCause() instanceof XMLNotWellFormedException) ) ) {
-                error = new StreamError( StreamError.Condition.not_well_formed );
+                error = new StreamError( StreamError.Condition.not_well_formed );  // xml格式错误
             } else {
-                error = new StreamError( StreamError.Condition.internal_server_error );
+                error = new StreamError( StreamError.Condition.internal_server_error );// 服务器内部错误
             }
-
+            // 拿到连接，并向连接发送错误信息（string类型，之后会转换成buffer）
             final Connection connection = (Connection) session.getAttribute( CONNECTION );
             connection.deliverRawText( error.toXML() );
-        } finally {
+        } finally { // 关闭连接
             final Connection connection = (Connection) session.getAttribute( CONNECTION );
             if (connection != null) {
                 connection.close();
@@ -162,7 +165,7 @@ public abstract class ConnectionHandler extends IoHandlerAdapter {
 
     @Override
     public void messageReceived(IoSession session, Object message) throws Exception {
-        // Get the stanza handler for this session
+        // Get the stanza handler for this session 拿到节处理器，在sessionOpened中（连接建立时）设置的
         StanzaHandler handler = (StanzaHandler) session.getAttribute(HANDLER);
         // Get the parser to use to process stanza. For optimization there is going
         // to be a parser for each running thread. Each Filter will be executed

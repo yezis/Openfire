@@ -82,31 +82,31 @@ public class MessageRouter extends BasicModule {
         if (packet == null) {
             throw new NullPointerException();
         }
-        ClientSession session = sessionManager.getSession(packet.getFrom());
+        ClientSession session = sessionManager.getSession(packet.getFrom());  // 查找消息发送方的session
 
         try {
-            // Invoke the interceptors before we process the read packet
+            // Invoke the interceptors before we process the read packet  // 在处理读数据包操作前调用拦截器
             InterceptorManager.getInstance().invokeInterceptors(packet, session, true, false);
             if (session == null || session.getStatus() == Session.STATUS_AUTHENTICATED) {
                 JID recipientJID = packet.getTo();
 
                 // If the server receives a message stanza with no 'to' attribute, it MUST treat the message as if the 'to' address were the bare JID <localpart@domainpart> of the sending entity.
-                if (recipientJID == null) {
+                if (recipientJID == null) { // 如果接受消息的jid为空则使用与发送方一样的jid
                     recipientJID = packet.getFrom().asBareJID();
                 }
 
-                // Check if the message was sent to the server hostname
-                if (recipientJID.getNode() == null && recipientJID.getResource() == null &&
-                        serverName.equals(recipientJID.getDomain())) {
+                // Check if the message was sent to the server hostname   // 消息的发送目标是服务器
+                if (recipientJID.getNode() == null && recipientJID.getResource() == null && // 无节点并且无源
+                        serverName.equals(recipientJID.getDomain())) {  // domain域，和服务器名字一致
                     if (packet.getElement().element("addresses") != null) {
                         // Message includes multicast processing instructions. Ask the multicastRouter
                         // to route this packet
-                        multicastRouter.route(packet);
+                        multicastRouter.route(packet); // 广播
                     }
                     else {
                         // Message was sent to the server hostname so forward it to a configurable
                         // set of JID's (probably admin users)
-                        sendMessageToAdmins(packet);
+                        sendMessageToAdmins(packet); // 消息发送至所有管理员
                     }
                     return;
                 }
@@ -130,7 +130,7 @@ public class MessageRouter extends BasicModule {
                 if (isAcceptable) {
                     boolean isPrivate = packet.getElement().element(QName.get("private", "urn:xmpp:carbons:2")) != null;
                     try {
-                        // Deliver stanza to requested route
+                        // Deliver stanza to requested route  将节发送到请求的路由
                         routingTable.routePacket(recipientJID, packet, false);
                     } catch (Exception e) {
                         log.error("Failed to route packet: " + packet.toXML(), e);
@@ -168,7 +168,7 @@ public class MessageRouter extends BasicModule {
                 packet.setError(PacketError.Condition.not_authorized);
                 session.process(packet);
             }
-            // Invoke the interceptors after we have processed the read packet
+            // Invoke the interceptors after we have processed the read packet  // 在处理读数据包操作前调用拦截器
             InterceptorManager.getInstance().invokeInterceptors(packet, session, true, true);
         } catch (PacketRejectedException e) {
             // An interceptor rejected this packet

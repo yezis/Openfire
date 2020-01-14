@@ -363,10 +363,10 @@ public abstract class LocalSession implements Session {
             // Perform the actual processing of the packet. This usually implies sending
             // the packet to the entity
             try {
-                // Invoke the interceptors before we send the packet
+                // Invoke the interceptors before we send the packet  // 此处调用拦截器时read传递的为false
                 InterceptorManager.getInstance().invokeInterceptors(packet, this, false, false);
                 deliver(packet);
-                // Invoke the interceptors after we have sent the packet
+                // Invoke the interceptors after we have sent the packet  // 此处调用拦截器时read传递的为false
                 InterceptorManager.getInstance().invokeInterceptors(packet, this, false, true);
             }
             catch (PacketRejectedException e) {

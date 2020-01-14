@@ -32,7 +32,7 @@ public class XMPPDecoder extends CumulativeProtocolDecoder {
     @Override
     protected boolean doDecode(IoSession session, IoBuffer in, ProtocolDecoderOutput out)
             throws Exception {
-        // Get the XML light parser from the IoSession
+        // Get the XML light parser from the IoSession   在ConnectionHandler.sessionOpened()设置
         XMLLightweightParser parser = (XMLLightweightParser) session.getAttribute(ConnectionHandler.XML_PARSER);
         // Parse as many stanzas as possible from the received data
         parser.read(in);

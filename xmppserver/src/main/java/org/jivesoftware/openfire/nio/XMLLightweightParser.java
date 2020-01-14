@@ -33,7 +33,7 @@ import org.jivesoftware.util.PropertyEventDispatcher;
 import org.jivesoftware.util.PropertyEventListener;
 
 /**
- * This is a Light-Weight XML Parser.
+ * This is a Light-Weight XML Parser.  轻量的buffer-xml解析器
  * It read data from a channel and collect data until data are available in
  * the channel.
  * When a message is complete you can retrieve messages invoking the method

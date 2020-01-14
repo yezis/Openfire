@@ -23,7 +23,7 @@ import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 /**
  * Encoder that does nothing. We are already writing ByteBuffers so there is no need
  * to encode them.<p>
- *
+ * 编码器并没有任何的内容，因为当需要写入的时候，已经是通过ByteBuffers写入的，如：NIOConnection#deliver(org.xmpp.packet.Packet)
  * This class exists as a counterpart of {@link XMPPDecoder}. Unlike that class this class does nothing.
  *
  * @author Gaston Dombiak

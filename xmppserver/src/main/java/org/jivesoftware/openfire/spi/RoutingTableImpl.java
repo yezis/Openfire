@@ -225,27 +225,27 @@ public class RoutingTableImpl extends BasicModule implements RoutingTable, Clust
      * (non-Javadoc)
      * @see org.jivesoftware.openfire.RoutingTable#routePacket(org.xmpp.packet.JID, org.xmpp.packet.Packet, boolean)
      * 
-     * @param jid the recipient of the packet to route.
-     * @param packet the packet to route.
-     * @param fromServer true if the packet was created by the server. This packets should
+     * @param jid the recipient of the packet to route. // 需要路由的数据包的接受者
+     * @param packet the packet to route.   // 需要路由的数据包
+     * @param fromServer true if the packet was created by the server. This packets should  // 数据包是否来自服务器
      *        always be delivered
      * @throws PacketException thrown if the packet is malformed (results in the sender's
      *      session being shutdown).
      */
     @Override
     public void routePacket(JID jid, Packet packet, boolean fromServer) throws PacketException {
-        boolean routed = false;
+        boolean routed = false; // 是否已路由
         try {
             if (serverName.equals(jid.getDomain())) {
-                // Packet sent to our domain.
+                // Packet sent to our domain.   // 数据包需要发送到当前的域
                 routed = routeToLocalDomain(jid, packet, fromServer);
             }
             else if (jid.getDomain().endsWith(serverName) && hasComponentRoute(jid)) {
-                // Packet sent to component hosted in this server
+                // Packet sent to component hosted in this server  // 数据包需要发送到当前服务器的组件
                 routed = routeToComponent(jid, packet, routed);
             }
             else {
-                // Packet sent to remote server
+                // Packet sent to remote server  // 数据包需要发送到远程服务器
                 routed = routeToRemoteDomain(jid, packet, routed);
             }
         } catch (Exception ex) {
@@ -258,7 +258,7 @@ public class RoutingTableImpl extends BasicModule implements RoutingTable, Clust
             Log.error("Primary packet routing failed", ex); 
         }
 
-        if (!routed) {
+        if (!routed) {   // 不同类型数据包的路由失败处理
             if (Log.isDebugEnabled()) {
                 Log.debug("Failed to route packet to JID: {} packet: {}", jid, packet.toXML());
             }
